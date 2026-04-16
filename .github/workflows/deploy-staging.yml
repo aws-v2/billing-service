@@ -57,7 +57,7 @@ jobs:
               -e DB_USER=postgres-staging-user \
               -e DB_PASSWORD=postgres-staging-password \
               -e DB_NAME=billing_db \
-              -e DB_SSLMODE=require \
+              -e DB_SSLMODE=disable \
               -e NATS_URL=nats://nats-staging:4222 \
               -e NATS_USER=nats-staging-user \
               -e NATS_PASSWORD=nats-staging-password \
