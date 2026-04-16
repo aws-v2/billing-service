@@ -50,7 +50,7 @@ func Load() (*Config, error) {
 			User:            getEnv("DB_USER", "postgres-staging-user"),
 			Password:        getEnv("DB_PASSWORD", "postgres-staging-password"),
 			Database:        getEnv("DB_NAME", "billing_db"),
-			SSLMode:         getEnv("DB_SSLMODE", "require"),
+			SSLMode:         getEnv("DB_SSLMODE", "disable"),
 			MaxOpenConns:    getEnvInt("DB_MAX_OPEN_CONNS", 25),
 			MaxIdleConns:    getEnvInt("DB_MAX_IDLE_CONNS", 10),
 			ConnMaxLifetime: getEnvDuration("DB_CONN_MAX_LIFETIME", 5*time.Minute),
