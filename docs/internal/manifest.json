@@ -1,5 +1,5 @@
 {
-  "service": "gamelift-service",
+  "service": "Billing-service",
   "version": "1.0.0",
   "type": "internal-docs",
   "description": "Internal engineering documentation for the GameLift service. Covers fleet orchestration, game session lifecycle, matchmaking, IAM integration, and event-driven backend systems.",

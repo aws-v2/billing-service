@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -102,12 +105,28 @@ func main() {
 		}
 	}()
 
-	// 8. Graceful Shutdown
+	// 8. Register with Eureka
+	for i := 1; i <= 3; i++ {
+		if err := registerWithEureka(cfg.Eureka); err != nil {
+			log.Printf("Eureka registration attempt %d failed: %v", i, err)
+			time.Sleep(5 * time.Second)
+		} else {
+			break
+		}
+	}
+	go sendHeartbeat(cfg.Eureka)
+
+	// 9. Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	log.Println("Shutting down server...")
+
+	if err := deregisterFromEureka(cfg.Eureka); err != nil {
+		log.Printf("Failed to deregister from Eureka: %v", err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -116,4 +135,108 @@ func main() {
 	}
 
 	log.Println("Server exited")
+}
+
+// ── Eureka ────────────────────────────────────────────────────────────────────
+
+func registerWithEureka(cfg config.EurekaConfig) error {
+	payload := map[string]any{
+		"instance": map[string]any{
+			"instanceId": cfg.InstanceID,
+			"hostName":   cfg.HostName,
+			"app":        cfg.AppName,
+			"ipAddr":     cfg.IPAddr,
+			"vipAddress": cfg.VipAddress,
+			"status":     "UP",
+			"port": map[string]any{
+				"$":        cfg.Port,
+				"@enabled": "true",
+			},
+			"dataCenterInfo": map[string]any{
+				"@class": "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
+				"name":   "MyOwn",
+			},
+			"healthCheckUrl": fmt.Sprintf("http://%s:%d/health", cfg.HostName, cfg.Port),
+			"statusPageUrl":  fmt.Sprintf("http://%s:%d/health", cfg.HostName, cfg.Port),
+			"homePageUrl":    fmt.Sprintf("http://%s:%d/", cfg.HostName, cfg.Port),
+		},
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal failed: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/apps/%s", cfg.ServerURL, cfg.AppName)
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("request build failed: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("eureka returned %d", resp.StatusCode)
+	}
+
+	log.Printf("Registered with Eureka: %s (%s)", cfg.InstanceID, url)
+	return nil
+}
+
+func sendHeartbeat(cfg config.EurekaConfig) {
+	ticker := time.NewTicker(cfg.HeartbeatInterval)
+	defer ticker.Stop()
+
+	url := fmt.Sprintf("%s/apps/%s/%s", cfg.ServerURL, cfg.AppName, cfg.InstanceID)
+	client := &http.Client{Timeout: 5 * time.Second}
+
+	for range ticker.C {
+		req, err := http.NewRequest(http.MethodPut, url, nil)
+		if err != nil {
+			log.Printf("Heartbeat request build failed: %v", err)
+			continue
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("Heartbeat failed: %v", err)
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+			log.Printf("Heartbeat rejected — status %d", resp.StatusCode)
+		} else {
+			log.Printf("Heartbeat sent: %s", cfg.InstanceID)
+		}
+		resp.Body.Close()
+	}
+}
+
+func deregisterFromEureka(cfg config.EurekaConfig) error {
+	url := fmt.Sprintf("%s/apps/%s/%s", cfg.ServerURL, cfg.AppName, cfg.InstanceID)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("request build failed: %w", err)
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("eureka returned %d", resp.StatusCode)
+	}
+
+	log.Printf("Deregistered from Eureka: %s", cfg.InstanceID)
+	return nil
 }

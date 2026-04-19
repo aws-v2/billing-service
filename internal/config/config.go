@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -13,9 +14,9 @@ type Config struct {
 	DB      DBConfig
 	NATS    NATSConfig
 	Server  ServerConfig
+	Eureka  EurekaConfig
 	Profile string
 }
-
 
 type DBConfig struct {
 	Host            string
@@ -40,8 +41,21 @@ type ServerConfig struct {
 	Port string
 }
 
+type EurekaConfig struct {
+	ServerURL         string
+	AppName           string
+	HostName          string
+	IPAddr            string
+	Port              int
+	VipAddress        string
+	InstanceID        string
+	HeartbeatInterval time.Duration
+}
+
 func Load() (*Config, error) {
 	_ = godotenv.Load()
+
+	port := getEnvInt("PORT", 8808)
 
 	cfg := &Config{
 		DB: DBConfig{
@@ -62,7 +76,17 @@ func Load() (*Config, error) {
 			Password: getEnv("NATS_PASSWORD", ""),
 		},
 		Server: ServerConfig{
-			Port: getEnv("PORT", "8808"),
+			Port: strconv.Itoa(port),
+		},
+		Eureka: EurekaConfig{
+			ServerURL:         getEnv("EUREKA_SERVER_URL", "http://localhost:8761/eureka"),
+			AppName:           getEnv("EUREKA_APP_NAME", "BILLING-SERVICE"),
+			HostName:          getEnv("EUREKA_HOSTNAME", "localhost"),
+			IPAddr:            getEnv("EUREKA_IP_ADDR", "127.0.0.1"),
+			Port:              port,
+			VipAddress:        getEnv("EUREKA_VIP_ADDRESS", "billing-service"),
+			InstanceID:        getEnv("EUREKA_INSTANCE_ID", fmt.Sprintf("billing-service:%d", port)),
+			HeartbeatInterval: getEnvDuration("EUREKA_HEARTBEAT_INTERVAL", 30*time.Second),
 		},
 		Profile: strings.ToLower(getEnv("APP_PROFILE", "dev")),
 	}

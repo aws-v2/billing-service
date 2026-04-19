@@ -1,5 +1,5 @@
 {
-  "service": "GameLift",
+  "service": "Billing",
   "version": "V1",
   "categories": [
     {
