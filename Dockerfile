@@ -30,6 +30,7 @@ COPY --from=builder /app/billing-service .
 
 # Copy migrations
 COPY --from=builder /app/internal/infrastructure/database/migrations ./internal/infrastructure/database/migrations
+COPY --from=builder /app/docs ./docs
 
 # Expose the application port
 EXPOSE 8808
