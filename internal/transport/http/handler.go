@@ -1,12 +1,11 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/Qarani-m/billing-service/internal/domain"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
@@ -17,8 +16,11 @@ func NewHandler(service domain.InvoiceService) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/api/v1/billing/invoices", h.CreateInvoice).Methods(http.MethodPost)
+func (h *Handler) RegisterRoutes(r *gin.Engine) {
+	v1 := r.Group("/api/v1/billing")
+	{
+		v1.POST("/invoices", h.CreateInvoice)
+	}
 }
 
 type CreateInvoiceRequest struct {
@@ -27,20 +29,18 @@ type CreateInvoiceRequest struct {
 	DueDate  time.Time `json:"due_date"`
 }
 
-func (h *Handler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateInvoice(c *gin.Context) {
 	var req CreateInvoiceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
 
-	invoice, err := h.service.CreateInvoice(r.Context(), req.TenantID, req.Amount, req.DueDate)
+	invoice, err := h.service.CreateInvoice(c.Request.Context(), req.TenantID, req.Amount, req.DueDate)
 	if err != nil {
-		http.Error(w, "failed to create invoice: "+err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create invoice: " + err.Error()})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(invoice)
+	c.JSON(http.StatusCreated, gin.H{"data": invoice})
 }

@@ -16,8 +16,15 @@ import (
 	transport "github.com/Qarani-m/billing-service/internal/transport/http"
 	"github.com/Qarani-m/billing-service/pkg/database"
 	internalMessaging "github.com/Qarani-m/billing-service/pkg/messaging"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
 
 func main() {
 	// 1. Load Config
@@ -64,20 +71,25 @@ func main() {
 	service := application.NewInvoiceService(repo, eventPublisher)
 	handler := transport.NewHandler(service)
 
-	// 5. Setup Router
-	r := mux.NewRouter()
-	handler.RegisterRoutes(r)
+	// 5. Docs
+	docsService := application.NewDocsService(getEnv("DOCS_PATH", "./docs"))
+	docsHandler := transport.NewDocsHandler(docsService)
 
-	// Add a simple health check
-	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+	// 6. Setup Gin Router
+	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
+
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// 6. Start Server
+	handler.RegisterRoutes(router)
+	transport.SetupRoutes(router, docsHandler)
+
+	// 7. Start Server
 	server := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
-		Handler:      r,
+		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -90,7 +102,7 @@ func main() {
 		}
 	}()
 
-	// 7. Graceful Shutdown
+	// 8. Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

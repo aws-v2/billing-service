@@ -1,0 +1,17 @@
+@base = http://localhost:8808/api/v1/billing
+
+### Public Manifest
+GET {{base}}/docs
+
+### Public Doc by slug
+GET {{base}}/docs/gamelift-overview
+
+### Internal Manifest
+GET {{base}}/internal/docs
+
+### Internal Doc by slug
+GET {{base}}/internal/docs/s3-architecture-overview
+
+
+### Health
+GET http://localhost:8808/health
