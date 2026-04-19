@@ -66,6 +66,6 @@ jobs:
               -e EUREKA_INSTANCE_ID=billing-service-staging:8808 \
               -e EUREKA_HOSTNAME=billing-service-staging \
               -e EUREKA_IP_ADDR=billing-service-staging \
-              -e EUREKA_VIP_ADDRESS=billing-service-staging \
+              -e EUREKA_VIP_ADDRESS=billing-service \
               -e EUREKA_HEARTBEAT_INTERVAL=30 \
               qarani/billing-service:staging
