@@ -1,4 +1,4 @@
-name: Prod deployment Pipeline
+name: Prod deployment
 
 on:
   push:
