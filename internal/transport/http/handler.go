@@ -32,15 +32,15 @@ type CreateInvoiceRequest struct {
 func (h *Handler) CreateInvoice(c *gin.Context) {
 	var req CreateInvoiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
+		SendErrorResponse(c, http.StatusBadRequest, "invalid request payload")
 		return
 	}
 
 	invoice, err := h.service.CreateInvoice(c.Request.Context(), req.TenantID, req.Amount, req.DueDate)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create invoice: " + err.Error()})
+		SendErrorResponse(c, http.StatusInternalServerError, "failed to create invoice: "+err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": invoice})
+	SendSuccessResponse(c, http.StatusCreated, "Invoice created successfully", invoice)
 }

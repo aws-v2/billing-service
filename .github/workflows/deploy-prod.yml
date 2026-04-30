@@ -81,7 +81,7 @@ jobs:
             docker run -d \
               --name billing-service-prod \
               --network aws-prod-network \
-              -p 8808:8808 \
+              -p 8061:8061 \
               -e APP_PROFILE=prod \
               -e SERVICE_NAME=billing-service \
               -e DB_HOST=postgres-prod \
@@ -98,7 +98,7 @@ jobs:
               -e EUREKA_HOSTNAME=billing-service-prod \
               -e EUREKA_IP_ADDR=127.0.0.1 \
               -e EUREKA_VIP_ADDRESS=billing-service \
-              -e EUREKA_INSTANCE_ID=billing-service:8808 \
+              -e EUREKA_INSTANCE_ID=billing-service:8061 \
               qarani/billing-service:prod
 
 
