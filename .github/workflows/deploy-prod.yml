@@ -76,31 +76,27 @@ jobs:
           script: |
             docker network create aws-prod-network || true
             docker pull qarani/billing-service:prod
-            docker stop billing-service-prod || true
-            docker rm billing-service-prod || true
-            docker run -d \
+            docker service rm billing-service-prod || true
+            docker service create \
               --name billing-service-prod \
               --network aws-prod-network \
-              -p 8808:8808 \
-              -e APP_PROFILE=prod \
-              -e SERVICE_NAME=billing-service \
-              -e DB_HOST=postgres-prod \
-              -e DB_PORT=5432 \
-              -e DB_USER=postgres-prod-user \
-              -e DB_PASSWORD=postgres-prod-password \
-              -e DB_NAME=billing_db \
-              -e DB_SSLMODE=disable \
-              -e NATS_URL=nats://nats-prod:4222 \
-              -e NATS_USER=nats-prod-user \
-              -e NATS_PASSWORD=nats-prod-password \
-              -e EUREKA_SERVER_URL=http://discovery-server-prod:8761/eureka \
-              -e EUREKA_APP_NAME=BILLING-SERVICE \
-              -e EUREKA_HOSTNAME=billing-service-prod \
-              -e EUREKA_IP_ADDR=127.0.0.1 \
-              -e EUREKA_VIP_ADDRESS=billing-service \
-              -e EUREKA_INSTANCE_ID=billing-service:8808 \
+              --publish published=8061,target=8061 \
+              --env APP_PROFILE=prod \
+              --env SERVICE_NAME=billing-service \
+              --env DB_HOST=postgres-prod \
+              --env DB_PORT=5432 \
+              --env DB_USER=postgres-prod-user \
+              --env DB_PASSWORD=postgres-prod-password \
+              --env DB_NAME=billing_db \
+              --env DB_SSLMODE=disable \
+              --env NATS_URL=nats://nats-prod:4222 \
+              --env NATS_USER=nats-prod-user \
+              --env NATS_PASSWORD=nats-prod-password \
+              --env EUREKA_SERVER_URL=http://discovery-server-prod:8761/eureka \
+              --env EUREKA_APP_NAME=BILLING-SERVICE \
+              --env EUREKA_HOSTNAME=billing-service-prod \
+              --env EUREKA_IP_ADDR=127.0.0.1 \
+              --env EUREKA_VIP_ADDRESS=billing-service \
+              --env EUREKA_INSTANCE_ID=billing-service:8061 \
               qarani/billing-service:prod
-
-
-
 

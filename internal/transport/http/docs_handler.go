@@ -16,31 +16,32 @@ func NewDocsHandler(service *application.DocsService) *DocsHandler {
 func (h *DocsHandler) GetPublicManifest(c *gin.Context) {
 	data, err := h.service.GetManifest(false)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		SendErrorResponse(c, 500, err.Error())
 		return
 	}
-	c.JSON(200, gin.H{"data": data})
+	SendSuccessResponse(c, 200, "Public manifest retrieved successfully", data)
 }
 
 func (h *DocsHandler) GetInternalManifest(c *gin.Context) {
 	data, err := h.service.GetManifest(true)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		SendErrorResponse(c, 500, err.Error())
 		return
 	}
-	c.JSON(200, gin.H{"data": data})
+	SendSuccessResponse(c, 200, "Internal manifest retrieved successfully", data)
 }
+
 
 func (h *DocsHandler) GetPublicDoc(c *gin.Context) {
 	slug := c.Param("slug")
 
 	doc, err := h.service.GetDoc(slug, false)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "not found"})
+		SendErrorResponse(c, 404, "not found")
 		return
 	}
 
-	c.JSON(200, gin.H{"data": doc})
+	SendSuccessResponse(c, 200, "Public document retrieved successfully", doc)
 }
 
 func (h *DocsHandler) GetInternalDoc(c *gin.Context) {
@@ -48,9 +49,9 @@ func (h *DocsHandler) GetInternalDoc(c *gin.Context) {
 
 	doc, err := h.service.GetDoc(slug, true)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "not found"})
+		SendErrorResponse(c, 404, "not found")
 		return
 	}
 
-	c.JSON(200, gin.H{"data": doc})
+	SendSuccessResponse(c, 200, "Internal document retrieved successfully", doc)
 }

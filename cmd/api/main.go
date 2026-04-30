@@ -78,6 +78,22 @@ func main() {
 	docsService := application.NewDocsService(getEnv("DOCS_PATH", "./docs"))
 	docsHandler := transport.NewDocsHandler(docsService)
 
+	// 5.1 Initialize Daraja Client
+
+	// 5.2 Initialize Services & Repositories
+	mpesaRepo := repository.NewMpesaRepository(db)
+	cardRepo := repository.NewCardRepository(db)
+	billingRepo := repository.NewPostgresBillingRepository(db)
+
+	mpesaService := application.NewMpesaService(mpesaRepo, cfg.Daraja)
+	cardService := application.NewCardService(cardRepo)
+	billingService := application.NewBillingService(billingRepo)
+
+	billingHandler := transport.NewBillingHandler(billingService, cardService, mpesaService)
+
+
+ 
+
 	// 6. Setup Gin Router
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
@@ -87,7 +103,7 @@ func main() {
 	})
 
 	handler.RegisterRoutes(router)
-	transport.SetupRoutes(router, docsHandler)
+	transport.SetupRoutes(router, docsHandler,billingHandler)
 
 	// 7. Start Server
 	server := &http.Server{
