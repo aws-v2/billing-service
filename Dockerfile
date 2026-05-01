@@ -33,7 +33,7 @@ COPY --from=builder /app/internal/infrastructure/database/migrations ./internal/
 COPY --from=builder /app/docs ./docs
 
 # Expose the application port
-EXPOSE 8061
+EXPOSE 8022
 
 # Run the application
 CMD ["./billing-service"]
