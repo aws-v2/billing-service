@@ -58,7 +58,7 @@ type EurekaConfig struct {
 func Load() (*Config, error) {
 	_ = godotenv.Load()
 
-	port := getEnvInt("PORT", 8061)
+	port := getEnvInt("PORT", 8022)
 
 	cfg := &Config{
 		DB: DBConfig{
@@ -100,7 +100,7 @@ func Load() (*Config, error) {
 			PassKey:        getEnv("DARJA_PASS_KEY", ""),
 			CallbackURL:    getEnv("DARJA_CALLBACK_URL", ""),
 			Environment:    getEnv("DARJA_ENVIRONMENT", "dev"),
-			DarajaBaseURL:  getEnv("DARJA_BASE_URL", "http://localhost:8061"),
+			DarajaBaseURL:  getEnv("DARJA_BASE_URL", "http://localhost:8022"),
 		},
 	}
 

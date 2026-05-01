@@ -1,4 +1,4 @@
-@base = http://localhost:8061/api/v1/billing
+@base = http://localhost:8022/api/v1/billing
 
 ### Public Manifest
 GET {{base}}/docs
@@ -14,13 +14,13 @@ GET {{base}}/internal/docs/s3-architecture-overview
 
 
 ### Health
-GET http://localhost:8061/health
+GET http://localhost:8022/health
 
 
 
 
 ### Health
-POST http://localhost:8061/api/v1/billing/card
+POST http://localhost:8022/api/v1/billing/card
 Content-Type: application/json
 Accept: application/json
 
@@ -38,7 +38,7 @@ Accept: application/json
 
 
 ### Health
-POST http://localhost:8061/api/v1/billing/mpesa/stk-push
+POST http://localhost:8022/api/v1/billing/mpesa/stk-push
 Content-Type: application/json
 Accept: application/json
 
