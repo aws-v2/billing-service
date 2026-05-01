@@ -13,11 +13,11 @@ const (
 )
 
 type NATSPublisher struct {
-	nc      *nats.Conn
-	profile string
+	nc     *nats.Conn
+	prefix string
 }
 
-func NewNATSPublisher(url, user, password, profile string) (*NATSPublisher, error) {
+func NewNATSPublisher(url, user, password, prefix string) (*NATSPublisher, error) {
 	opts := []nats.Option{
 		nats.Name("Billing-Service"),
 		nats.Timeout(5 * time.Second),
@@ -33,13 +33,13 @@ func NewNATSPublisher(url, user, password, profile string) (*NATSPublisher, erro
 	}
 
 	return &NATSPublisher{
-		nc:      nc,
-		profile: profile,
+		nc:     nc,
+		prefix: prefix,
 	}, nil
 }
 
-func (p *NATSPublisher) BuildSubject(domain, action string) string {
-	return fmt.Sprintf("%s.billing.v1.%s.%s", p.profile, domain, action)
+func (p *NATSPublisher) BuildSubject(service, action string) string {
+	return fmt.Sprintf("%s.billing.metric.%s.%s", p.prefix, service, action)
 }
 
 func (p *NATSPublisher) Publish(subject string, payload interface{}) error {

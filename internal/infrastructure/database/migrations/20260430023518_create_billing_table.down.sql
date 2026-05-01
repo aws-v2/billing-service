@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS billing_mpesa_transactions;
+DROP TABLE IF EXISTS billing_cards;
+DROP TABLE IF EXISTS billing_subscription_payments;
+DROP TABLE IF EXISTS billing_subscription_invoices;
+DROP TABLE IF EXISTS billing_subscriptions;
+DROP TABLE IF EXISTS billing_services;
+DROP TABLE IF EXISTS billing_invoices;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS billings;
+DROP TABLE IF EXISTS billing_invoice_payments;

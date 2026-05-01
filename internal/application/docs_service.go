@@ -20,8 +20,9 @@ type DocItem struct {
 }
 
 type DocCategory struct {
-	Title string    `json:"title"`
-	Items []DocItem `json:"items"`
+	Title      string    `json:"title"`
+	IsInternal bool      `json:"isInternal"`
+	Items      []DocItem `json:"items"`
 }
 
 type DocManifest struct {
@@ -64,13 +65,14 @@ func (s *DocsService) GetManifest(internal bool) (*DocManifest, error) {
 	scope := s.getScope(internal)
 	path := filepath.Join(s.basePath, scope, "manifest.json")
 
-	// Log the resolved path — helps debug container vs dev mismatches
-	fmt.Printf("[DocsService] reading manifest: %s\n", path)
+	return s.loadManifest(path)
+}
 
+func (s *DocsService) loadManifest(path string) (*DocManifest, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("manifest not found at %q — check DOCS_PATH and folder structure", path)
+			return nil, fmt.Errorf("manifest not found at %q", path)
 		}
 		return nil, fmt.Errorf("failed to read manifest at %q: %w", path, err)
 	}
@@ -81,6 +83,33 @@ func (s *DocsService) GetManifest(internal bool) (*DocManifest, error) {
 	}
 
 	return &manifest, nil
+}
+
+// GetUnifiedManifest merges public and internal docs if isAdmin is true
+func (s *DocsService) GetUnifiedManifest(isAdmin bool) (*DocManifest, error) {
+	publicManifest, err := s.GetManifest(false)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isAdmin {
+		return publicManifest, nil
+	}
+
+	internalManifest, err := s.GetManifest(true)
+	if err != nil {
+		// Log error but return public manifest if internal fails
+		fmt.Printf("[DocsService] WARNING: failed to load internal manifest: %v\n", err)
+		return publicManifest, nil
+	}
+
+	// Flag internal categories and merge
+	for i := range internalManifest.Categories {
+		internalManifest.Categories[i].IsInternal = true
+	}
+	publicManifest.Categories = append(publicManifest.Categories, internalManifest.Categories...)
+	
+	return publicManifest, nil
 }
 // GetDoc loads a markdown file and parses frontmatter
 func (s *DocsService) GetDoc(slug string, internal bool) (*DocResponse, error) {
@@ -102,6 +131,22 @@ func (s *DocsService) GetDoc(slug string, internal bool) (*DocResponse, error) {
 		Metadata: meta,
 		Content:  content,
 	}, nil
+}
+
+// GetUnifiedDoc handles unified resolution of documents
+func (s *DocsService) GetUnifiedDoc(slug string, isAdmin bool) (*DocResponse, error) {
+	// 1. Try public first
+	doc, err := s.GetDoc(slug, false)
+	if err == nil {
+		return doc, nil
+	}
+
+	// 2. Try internal if admin
+	if isAdmin {
+		return s.GetDoc(slug, true)
+	}
+
+	return nil, errors.New("not found or unauthorized")
 }
 
 // =====================

@@ -79,7 +79,7 @@ jobs:
             docker rm billing-service-staging || true
             docker run -d --name billing-service-staging \
               --network aws-staging-network \
-              -p 8808:8808 \
+              -p 8022:8022 \
               -e APP_PROFILE=staging \
               -e DB_HOST=postgres-staging \
               -e DB_PORT=5432 \
@@ -90,9 +90,10 @@ jobs:
               -e NATS_URL=nats://nats-staging:4222 \
               -e NATS_USER=nats-staging-user \
               -e NATS_PASSWORD=nats-staging-password \
+              -e NATS_PREFIX=staging.v1 \
               -e EUREKA_SERVER_URL=http://discovery-server-staging:8761/eureka \
               -e EUREKA_APP_NAME=billing-service-staging \
-              -e EUREKA_INSTANCE_ID=billing-service-staging:8808 \
+              -e EUREKA_INSTANCE_ID=billing-service-staging:8022 \
               -e EUREKA_HOSTNAME=billing-service-staging \
               -e EUREKA_IP_ADDR=billing-service-staging \
               -e EUREKA_VIP_ADDRESS=billing-service \

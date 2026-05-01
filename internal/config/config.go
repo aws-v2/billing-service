@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Qarani-m/billing-service/internal/domain"
 	"github.com/joho/godotenv"
 )
 
@@ -16,6 +17,7 @@ type Config struct {
 	Server  ServerConfig
 	Eureka  EurekaConfig
 	Profile string
+	Daraja  domain.DarajaConfig
 }
 
 type DBConfig struct {
@@ -35,6 +37,7 @@ type NATSConfig struct {
 	URL      string
 	User     string
 	Password string
+	Prefix   string
 }
 
 type ServerConfig struct {
@@ -55,7 +58,7 @@ type EurekaConfig struct {
 func Load() (*Config, error) {
 	_ = godotenv.Load()
 
-	port := getEnvInt("PORT", 8808)
+	port := getEnvInt("PORT", 8022)
 
 	cfg := &Config{
 		DB: DBConfig{
@@ -72,8 +75,9 @@ func Load() (*Config, error) {
 		},
 		NATS: NATSConfig{
 			URL:      getEnv("NATS_URL", "nats://localhost:4222"),
-			User:     getEnv("NATS_USER", ""),
-			Password: getEnv("NATS_PASSWORD", ""),
+			User:     getEnv("NATS_USER", "auth-server"),
+			Password: getEnv("NATS_PASSWORD", "auth-secreta"),
+			Prefix:   getEnv("NATS_PREFIX", "dev.v1"),
 		},
 		Server: ServerConfig{
 			Port: strconv.Itoa(port),
@@ -89,6 +93,15 @@ func Load() (*Config, error) {
 			HeartbeatInterval: getEnvDuration("EUREKA_HEARTBEAT_INTERVAL", 30*time.Second),
 		},
 		Profile: strings.ToLower(getEnv("APP_PROFILE", "dev")),
+		Daraja: domain.DarajaConfig{
+			ConsumerKey:    getEnv("DARJA_CONSUMER_KEY", ""),
+			ConsumerSecret: getEnv("DARJA_CONSUMER_SECRET", ""),
+			ShortCode:      getEnv("DARJA_SHORT_CODE", ""),
+			PassKey:        getEnv("DARJA_PASS_KEY", ""),
+			CallbackURL:    getEnv("DARJA_CALLBACK_URL", ""),
+			Environment:    getEnv("DARJA_ENVIRONMENT", "dev"),
+			DarajaBaseURL:  getEnv("DARJA_BASE_URL", "http://localhost:8022"),
+		},
 	}
 
 	return cfg, nil

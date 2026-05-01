@@ -61,33 +61,70 @@ func main() {
 		cfg.NATS.URL,
 		cfg.NATS.User,
 		cfg.NATS.Password,
-		cfg.Profile,
+		cfg.NATS.Prefix,
 	)
 	if err != nil {
 		log.Fatalf("Failed to connect to NATS: %v", err)
 	}
 	defer natsPublisher.Close()
 
-	// 4. Initialize Dependency Injection
+	// 4. Setup NATS Subscriber
+	natsSubscriber, err := internalMessaging.NewNATSSubscriber(
+		cfg.NATS.URL,
+		cfg.NATS.User,
+		cfg.NATS.Password,
+		cfg.NATS.Prefix,
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to NATS Subscriber: %v", err)
+	}
+	defer natsSubscriber.Close()
+
+	// 5. Initialize Dependency Injection
 	repo := repository.NewPostgresInvoiceRepository(db)
 	eventPublisher := messaging.NewNATSEventPublisher(natsPublisher)
 	service := application.NewInvoiceService(repo, eventPublisher)
 	handler := transport.NewHandler(service)
 
-	// 5. Docs
-	docsService := application.NewDocsService(getEnv("DOCS_PATH", "./docs"))
-	docsHandler := transport.NewDocsHandler(docsService)
-
+	// Ingestion
+	metricSubscriber := messaging.NewMetricSubscriber(natsSubscriber)
+	
 	// 6. Setup Gin Router
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
+
+	// Start Ingestion
+	// Note: billingService is initialized later, so we need to bridge it or initialize it earlier.
+	// But according to the user request, we are just designing the ingestion layer.
+	// I'll initialize billingService earlier to allow the subscriber to use it.
+	
+	billingRepo := repository.NewPostgresBillingRepository(db)
+	billingService := application.NewBillingService(billingRepo)
+
+	if err := metricSubscriber.StartIngestion(billingService); err != nil {
+		log.Printf("Failed to start metric ingestion: %v", err)
+	}
+
+	// 7. Docs
+	docsService := application.NewDocsService(getEnv("DOCS_PATH", "./docs"))
+	docsHandler := transport.NewDocsHandler(docsService)
+
+	// 8. Initialize Daraja Client
+	// 9. Initialize additional Services & Repositories
+	mpesaRepo := repository.NewMpesaRepository(db)
+	cardRepo := repository.NewCardRepository(db)
+
+	mpesaService := application.NewMpesaService(mpesaRepo, cfg.Daraja)
+	cardService := application.NewCardService(cardRepo)
+
+	billingHandler := transport.NewBillingHandler(billingService, cardService, mpesaService)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
 	handler.RegisterRoutes(router)
-	transport.SetupRoutes(router, docsHandler)
+	transport.SetupRoutes(router, docsHandler,billingHandler)
 
 	// 7. Start Server
 	server := &http.Server{

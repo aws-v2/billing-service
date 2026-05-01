@@ -6,51 +6,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 type DocsHandler struct {
 	service *application.DocsService
 }
+
 func NewDocsHandler(service *application.DocsService) *DocsHandler {
 	return &DocsHandler{service: service}
 }
-func (h *DocsHandler) GetPublicManifest(c *gin.Context) {
-	data, err := h.service.GetManifest(false)
+
+func (h *DocsHandler) GetDocsManifest(c *gin.Context) {
+	role, _ := c.Get("role")
+	isAdmin := role == "ADMIN"
+	
+	data, err := h.service.GetUnifiedManifest(isAdmin)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		SendErrorResponse(c, 500, err.Error())
 		return
 	}
-	c.JSON(200, gin.H{"data": data})
+	SendSuccessResponse(c, 200, "Manifest retrieved successfully", data)
 }
 
-func (h *DocsHandler) GetInternalManifest(c *gin.Context) {
-	data, err := h.service.GetManifest(true)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{"data": data})
-}
-
-func (h *DocsHandler) GetPublicDoc(c *gin.Context) {
+func (h *DocsHandler) GetDoc(c *gin.Context) {
 	slug := c.Param("slug")
+	role, _ := c.Get("role")
+	isAdmin := role == "ADMIN"
 
-	doc, err := h.service.GetDoc(slug, false)
+	doc, err := h.service.GetUnifiedDoc(slug, isAdmin)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "not found"})
+		SendErrorResponse(c, 404, "Document not found or unauthorized")
 		return
 	}
 
-	c.JSON(200, gin.H{"data": doc})
-}
-
-func (h *DocsHandler) GetInternalDoc(c *gin.Context) {
-	slug := c.Param("slug")
-
-	doc, err := h.service.GetDoc(slug, true)
-	if err != nil {
-		c.JSON(404, gin.H{"error": "not found"})
-		return
-	}
-
-	c.JSON(200, gin.H{"data": doc})
+	SendSuccessResponse(c, 200, "Document retrieved successfully", doc)
 }
