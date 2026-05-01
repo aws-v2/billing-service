@@ -16,13 +16,15 @@ type Billing struct {
 }
 
 // BillingRepository defines the data access layer for billing records.
-type BillingRepository interface {
+type PostgresBillingRepository interface {
 	GetAll(ctx context.Context) ([]Billing, error)
 	GetByService(ctx context.Context, serviceName string) ([]Billing, error)
+	SaveMetric(metric Metric) error
 }
 
 // BillingService defines the business logic for billing.
 type BillingService interface {
 	GetAllBillings(ctx context.Context) ([]Billing, error)
 	GetBillingByService(ctx context.Context, serviceName string) ([]Billing, error)
+	RecordMetric(metric Metric) error
 }

@@ -2,49 +2,30 @@
   "service": "Billing-service",
   "version": "1.0.0",
   "type": "internal-docs",
-  "description": "Internal engineering documentation for the GameLift service. Covers fleet orchestration, game session lifecycle, matchmaking, IAM integration, and event-driven backend systems.",
+  "description": "Internal engineering documentation for the Billing Service. Covers NATS ingestion, metric pipelines, and S3 billing algorithms.",
   "audience": "engineers",
   "visibility": "internal-only",
 
   "categories": [
     {
-      "title": "GameLift Architecture",
+      "title": "Billing Core Architecture",
       "items": [
-        { "title": "GameLift System Overview", "slug": "s3-architecture-overview" },
-        { "title": "Core GameLift Components", "slug": "s3-core-components" },
-        { "title": "Session Request Lifecycle", "slug": "s3-request-lifecycle" },
-        { "title": "Service Startup Lifecycle", "slug": "s3-startup-lifecycle" }
+        { "title": "Billing System Overview", "slug": "billing-architecture-overview" },
+        { "title": "Metric Ingestion Pipeline", "slug": "billing-metrics-pipeline" },
+        { "title": "NATS Subject Hierarchy", "slug": "billing-nats-subjects" }
       ]
     },
     {
-      "title": "Fleet & Compute Layer",
+      "title": "Service Specific Billing",
       "items": [
-        { "title": "Fleet Runtime Design", "slug": "s3-storage-engine" },
-        { "title": "Fleet Instance Model", "slug": "s3-bucket-model" },
-        { "title": "Game Session Execution Flow", "slug": "s3-object-operations" }
+        { "title": "S3 Billing Algorithms", "slug": "billing-s3-design" },
+        { "title": "EC2 Billing Algorithms", "slug": "billing-ec2-design" }
       ]
     },
     {
-      "title": "IAM & Security",
+      "title": "Development & Testing",
       "items": [
-        { "title": "GameLift IAM Architecture", "slug": "s3-iam-architecture" },
-        { "title": "Authentication Flow", "slug": "s3-auth-flow" },
-        { "title": "Authorization Model", "slug": "s3-authz-model" }
-      ]
-    },
-    {
-      "title": "Event System (NATS)",
-      "items": [
-        { "title": "GameLift Event-Driven Architecture", "slug": "s3-event-system" },
-        { "title": "GameLift Event Types", "slug": "s3-event-types" },
-        { "title": "Metrics & Game Analytics Pipeline", "slug": "s3-metrics-pipeline" }
-      ]
-    },
-    {
-      "title": "Development & Debugging",
-      "items": [
-        { "title": "Local GameLift Development Setup", "slug": "s3-local-dev" },
-        { "title": "GameLift Debugging Guide", "slug": "s3-debugging" }
+        { "title": "Mock Data Injection", "slug": "billing-mock-injection" }
       ]
     }
   ]
