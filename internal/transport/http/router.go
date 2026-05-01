@@ -1,19 +1,17 @@
 package http
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/Qarani-m/billing-service/internal/middleware"
+	"github.com/gin-gonic/gin"
+)
 
 func SetupRoutes(r *gin.Engine, docsHandler *DocsHandler, billingHandler *BillingHandler) {
+	r.Use(middleware.AuthMiddleware())
 
 	docs := r.Group("/api/v1/billing/docs")
 	{
-		docs.GET("", docsHandler.GetPublicManifest)
-		docs.GET("/:slug", docsHandler.GetPublicDoc)
-	}
-
-	internal := r.Group("/api/v1/billing/internal/docs")
-	{
-		internal.GET("", docsHandler.GetInternalManifest)
-		internal.GET("/:slug", docsHandler.GetInternalDoc)
+		docs.GET("", docsHandler.GetDocsManifest)
+		docs.GET("/:slug", docsHandler.GetDoc)
 	}
 
 	billing := r.Group("/api/v1/billing")

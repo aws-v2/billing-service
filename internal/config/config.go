@@ -37,6 +37,7 @@ type NATSConfig struct {
 	URL      string
 	User     string
 	Password string
+	Prefix   string
 }
 
 type ServerConfig struct {
@@ -76,6 +77,7 @@ func Load() (*Config, error) {
 			URL:      getEnv("NATS_URL", "nats://localhost:4222"),
 			User:     getEnv("NATS_USER", "auth-server"),
 			Password: getEnv("NATS_PASSWORD", "auth-secreta"),
+			Prefix:   getEnv("NATS_PREFIX", "dev.v1"),
 		},
 		Server: ServerConfig{
 			Port: strconv.Itoa(port),
